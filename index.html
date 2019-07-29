@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>Paddling</title>
+</head>
+
+<body>
+	<p id="content" style="color: rgba(0,0,0,0.25)">
+		
+	</p>
+	<p id="page" style="color: rgba(0,0,0,0.25)">
+
+	</p>
+	<script type="text/javascript">
+
+		const {ipcRenderer} = require('electron')
+		const con = require('electron').remote.getGlobal('console')
+		var content = ""
+		var index = -1
+		let pageLength = 50
+
+		function init() {
+			// var path = require('path')
+			var _path = '/Users/tconan/A.Document/book/网游之近战法师.txt'
+			var fs = require('fs')
+			fs.readFile(_path, 'utf8', function (err, data) {
+				if (err) return console.log(err)
+				content = data
+				
+				if (index == -1 && localStorage.index) {
+					index = Number(localStorage.index)
+				} else if (index == -1) {
+					index = 0
+				}
+
+				let searchText // = '剑鬼郁闷。他跟着云中暮一起'
+				if (searchText) {
+					let seatchIndex = content.indexOf(searchText)
+					if (seatchIndex > 0) {
+						index = seatchIndex
+					}
+				}
+				refresh()
+			})
+
+			ipcRenderer.on('nextPage', (event, message) => {
+				console.log('nextPage')
+				nextPage()
+			})
+
+			ipcRenderer.on('lastPage', (event, message) => {
+				console.log('lastPage')
+				lastPage()
+			})
+		}
+
+		function refresh() {
+
+			// index = 459552
+			localStorage.index = index
+
+			document.getElementById('page').innerHTML = '' + index + '/' + content.length
+
+			if (index >= content.length) {
+				document.getElementById('content').innerHTML = '最后一页'
+				return
+			}
+
+			if (index < 0) {
+				document.getElementById('content').innerHTML = '封面'
+				return
+			}
+
+			let tmpContent = content.substring(index, index + pageLength)
+			document.getElementById('content').innerHTML = tmpContent
+
+			function heredoc(fn) {
+				return fn.toString().split('\n').slice(1,-1).join('\n') + '\n'
+			}
+			
+			var tmpl = heredoc(function(){/*
+TconandeMac-mini:paddling-electron tconan$ npm start
+
+> electron-quick-start@1.0.0 start /Users/tconan/ImproveSpace/paddling-electron
+> electron .
+
+2019-07-23 13:54:56.799 Electron[2263:91484] *** WARNING: Textured window <AtomNSWindow: 0x7ffe9add11b0> is getting an implicitly transparent titlebar. This will break when linking against newer SDKs. Use NSWindow's -titlebarAppearsTransparent=YES instead.
+TconandeMac-mini:paddling-electron tconan$ npm start
+/Users/tconan/ImproveSpace/paddling-electron# TTcontentTT
+
+> electron-quick-start@1.0.0 start /Users/tconan/ImproveSpace/paddling-electron
+> electron .
+
+2019-07-23 13:57:13.985 Electron[2306:92608] *** WARNING: Textured window <AtomNSWindow: 0x7fa1f6512910> is getting an implicitly transparent titlebar. This will break when linking against newer SDKs. Use NSWindow's -titlebarAppearsTransparent=YES instead.
+TconandeMac-mini:paddling-electron tconan$ npm start
+		 */});
+		 	//tmpContent = tmpContent.replace(/\n/g, '')
+			tmpContent = tmpl.replace('TTcontentTT', tmpContent);
+
+			// console.log(tmpContent)
+			con.clear();
+			con.log(tmpContent)
+			// ipcRenderer.send('print', tmpContent)
+		}
+
+		function nextPage() {
+			index += pageLength
+			refresh()
+		}
+
+		function lastPage() {
+			index -= pageLength
+			refresh()
+		}
+
+		init()
+		
+	</script>
+	<!-- You can also require other files to run in this process -->
+	<script src="./renderer.js"></script>
+</body>
+
+</html>
